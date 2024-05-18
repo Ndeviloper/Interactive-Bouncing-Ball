@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Bouncing Ball</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            flex-direction: column;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        h1 {
+            margin: 20px 0;
+            font-size: 24px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        #container {
+            width: 90vw;
+            height: 90vw;
+            max-width: 550px; /* Maximum width */
+            max-height: 550px; /* Maximum height */
+            background-color: #fff;
+            border: 2px solid black;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #ball {
+            width: 40px;
+            height: 40px;
+            background-color: black;
+            border: 2px solid black;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Bouncing Ball</h1>
+    <div id="container">
+        <div id="ball"></div>
+    </div>
+    <script>
+        const ball = document.getElementById('ball');
+        const container = document.getElementById('container');
+
+        const ballRadius = ball.offsetWidth / 2;
+
+        let isDragging = false;
+        let throwStartX, throwStartY;
+        let prevX, prevY;
+        let dx = 0; // horizontal speed
+        let dy = 0; // vertical speed
+        const gravity = 0.2;
+        const bounceFactor = -0.7;
+        const dragFactor = 0.2; // Increased for more sensitivity
+        const minThrowSpeed = 5; // minimum speed for bounce effect
+
+        function onPointerDown(event) {
+            event.preventDefault();
+
+            const pointerX = event.clientX || event.touches[0].clientX;
+            const pointerY = event.clientY || event.touches[0].clientY;
+
+            // Check if pointer is inside the hitbox around the ball
+            const ballRect = ball.getBoundingClientRect();
+            const ballCenterX = ballRect.left + ballRect.width / 2;
+            const ballCenterY = ballRect.top + ballRect.height / 2;
+            const distance = Math.sqrt((pointerX - ballCenterX) ** 2 + (pointerY - ballCenterY) ** 2);
+
+            if (distance <= ballRadius) {
+                isDragging = true;
+                throwStartX = pointerX;
+                throwStartY = pointerY;
+
+                prevX = pointerX;
+                prevY = pointerY;
+
+                dx = 0;
+                dy = 0;
+            }
+        }
+
+        function onPointerMove(event) {
+            if (isDragging) {
+                const pointerX = event.clientX || event.touches[0].clientX;
+                const pointerY = event.clientY || event.touches[0].clientY;
+
+                dx = (pointerX - prevX) * dragFactor;
+                dy = (pointerY - prevY) * dragFactor;
+
+                prevX = pointerX;
+                prevY = pointerY;
+
+                ball.style.left = pointerX - container.getBoundingClientRect().left - ballRadius + 'px';
+                ball.style.top = pointerY - container.getBoundingClientRect().top - ballRadius + 'px';
+            }
+        }
+
+        function onPointerUp() {
+            isDragging = false;
+        }
+
+        container.addEventListener('mousedown', onPointerDown);
+        container.addEventListener('mousemove', onPointerMove);
+        document.addEventListener('mouseup', onPointerUp);
+
+        container.addEventListener('touchstart', onPointerDown);
+        container.addEventListener('touchmove', onPointerMove);
+        document.addEventListener('touchend', onPointerUp);
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!isDragging) {
+                dy += gravity;
+
+                let newX = ball.offsetLeft + dx;
+                let newY = ball.offsetTop + dy;
+
+                if (newX <= 0 || newX >= container.offsetWidth - ball.offsetWidth) {
+                    if (Math.abs(dx) > minThrowSpeed) {
+                        dx *= bounceFactor;
+                    } else {
+                        dx = 0;
+                    }
+                }
+
+                if (newY <= 0 || newY >= container.offsetHeight - ball.offsetHeight) {
+                    if (Math.abs(dy) > minThrowSpeed) {
+                        dy *= bounceFactor;
+                    } else {
+                        dy = 0;
+                    }
+                }
+
+                newX = Math.max(newX, 0);
+                newX = Math.min(newX, container.offsetWidth - ball.offsetWidth);
+                newY = Math.max(newY, 0);
+                newY = Math.min(newY, container.offsetHeight - ball.offsetHeight);
+
+                ball.style.left = newX + 'px';
+                ball.style.top = newY + 'px';
+            }
+        }
+
+        animate();
+    </script>
+</body>
+</html>
